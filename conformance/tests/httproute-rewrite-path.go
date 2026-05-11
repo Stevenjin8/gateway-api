@@ -43,9 +43,11 @@ var HTTPRouteRewritePath = confsuite.ConformanceTest{
 	Test: func(t *testing.T, suite *confsuite.ConformanceTestSuite) {
 		ns := confsuite.InfrastructureNamespace
 		routeNN := types.NamespacedName{Name: "rewrite-path", Namespace: ns}
+		bareSlashRouteNN := types.NamespacedName{Name: "rewrite-path-bare-slash-prefix", Namespace: ns}
 		gwNN := types.NamespacedName{Name: "same-namespace", Namespace: ns}
-		gwAddr := kubernetes.GatewayAndHTTPRoutesMustBeAccepted(t, suite.Client, suite.TimeoutConfig, suite.ControllerName, kubernetes.NewGatewayRef(gwNN), routeNN)
+		gwAddr := kubernetes.GatewayAndHTTPRoutesMustBeAccepted(t, suite.Client, suite.TimeoutConfig, suite.ControllerName, kubernetes.NewGatewayRef(gwNN), routeNN, bareSlashRouteNN)
 		kubernetes.HTTPRouteMustHaveResolvedRefsConditionsTrue(t, suite.Client, suite.TimeoutConfig, routeNN, gwNN)
+		kubernetes.HTTPRouteMustHaveResolvedRefsConditionsTrue(t, suite.Client, suite.TimeoutConfig, bareSlashRouteNN, gwNN)
 
 		testCases := []http.ExpectedResponse{
 			{
@@ -138,6 +140,45 @@ var HTTPRouteRewritePath = confsuite.ConformanceTest{
 						},
 					},
 					AbsentHeaders: []string{"X-Header-Remove"},
+				},
+				Backend:   confsuite.InfraBackendServiceNameV1,
+				Namespace: ns,
+			},
+			{
+				Request: http.Request{
+					Path: "/foo/bar",
+					Host: "rewrite-bare-slash.example",
+				},
+				ExpectedRequest: &http.ExpectedRequest{
+					Request: http.Request{
+						Path: "/replacement-prefix/foo/bar",
+					},
+				},
+				Backend:   confsuite.InfraBackendServiceNameV1,
+				Namespace: ns,
+			},
+			{
+				Request: http.Request{
+					Path: "/foo",
+					Host: "rewrite-bare-slash.example",
+				},
+				ExpectedRequest: &http.ExpectedRequest{
+					Request: http.Request{
+						Path: "/replacement-prefix/foo",
+					},
+				},
+				Backend:   confsuite.InfraBackendServiceNameV1,
+				Namespace: ns,
+			},
+			{
+				Request: http.Request{
+					Path: "/",
+					Host: "rewrite-bare-slash.example",
+				},
+				ExpectedRequest: &http.ExpectedRequest{
+					Request: http.Request{
+						Path: "/replacement-prefix",
+					},
 				},
 				Backend:   confsuite.InfraBackendServiceNameV1,
 				Namespace: ns,

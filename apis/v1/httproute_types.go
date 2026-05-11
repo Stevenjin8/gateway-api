@@ -1179,6 +1179,11 @@ type HTTPPathModifier struct {
 	// Using any other HTTPRouteMatch type on the same HTTPRouteRule will result in
 	// the implementation setting the Accepted Condition for the Route to `status: False`.
 	//
+	// When the matched `PathPrefix` is `/`, the replacement is inserted before
+	// the request path with a `/` separator preserved between the two. A request
+	// to exactly `/` is replaced with the literal replacement value (without an
+	// appended trailing `/`).
+	//
 	// Request Path | Prefix Match | Replace Prefix | Modified Path
 	// -------------|--------------|----------------|----------
 	// /foo/bar     | /foo         | /xyz           | /xyz/bar
@@ -1192,6 +1197,13 @@ type HTTPPathModifier struct {
 	// /foo         | /foo         | <empty string> | /
 	// /foo/        | /foo         | /              | /
 	// /foo         | /foo         | /              | /
+	// /foo/bar     | /            | /xyz           | /xyz/foo/bar
+	// /foo         | /            | /xyz           | /xyz/foo
+	// /            | /            | /xyz           | /xyz
+	// /foo         | /            | /xyz/          | /xyz/foo
+	// /foo         | /            | <empty string> | /foo
+	// /            | /            | <empty string> | /
+	// /            | /            | /              | /
 	//
 	// +kubebuilder:validation:MaxLength=1024
 	// +optional

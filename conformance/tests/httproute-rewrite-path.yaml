@@ -96,3 +96,31 @@ spec:
     backendRefs:
     - name: infra-backend-v1
       port: 8080
+---
+# This route exercises `ReplacePrefixMatch` when the matched PathPrefix is the
+# root (`/`). It is isolated under a dedicated hostname so the catch-all match
+# does not interact with other HTTPRoutes attached to the shared gateway.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: rewrite-path-bare-slash-prefix
+  namespace: gateway-conformance-infra
+spec:
+  parentRefs:
+  - name: same-namespace
+  hostnames:
+  - rewrite-bare-slash.example
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          type: ReplacePrefixMatch
+          replacePrefixMatch: /replacement-prefix
+    backendRefs:
+    - name: infra-backend-v1
+      port: 8080
