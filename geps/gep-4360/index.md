@@ -3,7 +3,7 @@ title: "GEP-4360: Regex Path Rewrites"
 ---
 
 * Issue: [#4359](https://github.com/kubernetes-sigs/gateway-api/issues/4359)
-* Status: Experimental
+* Status: Implementable
 
 ## TLDR
 
@@ -119,3 +119,28 @@ filters:
         pattern: ^/api/(.*)$
         substitution: /\1
 ```
+
+## Graduation Criteria
+
+### Feature Names
+
+- `Regex-based Path Rewrites`
+
+### Standard
+
+Before this GEP graduates to the Standard channel, the following criteria must
+be met:
+
+- [ ] Conformance coverage for `Regex-based Path Rewrites`, using the syntax and semantics defined by [GEP-4359](../gep-4359/index.md).
+- [ ] At least 3 implementations pass the conformance tests.
+- [ ] The feature has completed its approved 6-month probationary period with no significant API changes.
+- [ ] Feedback from implementations has resolved any portability concerns specific to applying Gateway API Regex to HTTP path rewrites.
+
+## Test Plan
+
+Conformance tests for `Regex-based Path Rewrites` will verify that:
+
+- A rewrite using a Gateway API Regex-compatible pattern and capture-group
+  substitution produces the expected rewritten request path. This includes various edge cases, such as:
+  overlapping matches, multiple matches, and empty matches.
+- A request path with no matching substring remains unchanged.
